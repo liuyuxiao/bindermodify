@@ -1588,12 +1588,17 @@ static void binder_transaction(struct binder_proc *proc,
 	//lyx
 
 	char buffer[256];
+	struct pid* callpid = find_vpid(e->from_proc);
+	struct task_struct *calltask = pid_task(callpid,PIDTYPE_PID);
+	struct pid* topid = find_vpid(e->to_proc);
+	struct task_struct *totask = pid_task(topid,PIDTYPE_PID);
 	snprintf(buffer,sizeof(buffer),
-		  " %s from %d:%d to %d:%d node %d handle %d size %d:%d\n",
+		  " %s from %s:%d to %s:%d node %d handle %d size %d:%d\n",
 		    (e->call_type == 2) ? "reply" :
-		   ((e->call_type == 1) ? "async" : "call "), e->from_proc,
-		   e->from_thread, e->to_proc, e->to_thread, e->to_node,
+		   ((e->call_type == 1) ? "async" : "call "), calltask->comm,
+		   e->from_thread, totask->comm, e->to_thread, e->to_node,
 		   e->target_handle, e->data_size, e->offsets_size);
+	
 	trace_printk("lyx buffer %s",buffer);
 
 	for (; offp < off_end; offp++) {
